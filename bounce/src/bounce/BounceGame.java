@@ -1,9 +1,13 @@
 package bounce;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import jig.Entity;
 import jig.ResourceManager;
 import jig.Vector;
 
+import org.newdawn.slick.Animation;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.GameContainer;
@@ -14,7 +18,9 @@ import org.newdawn.slick.SlickException;
  * A Simple Game of Bounce.
  * 
  * Our game now displays a moving rectangular "ball" that bounces off the sides
- * of the game container, and appears broken for a short time after a bounce.
+ * of the game container. When the ball bounces, it appears broken for a short
+ * time afterwards and an explosion animation is played at the impact site to
+ * add a bit of eye-candy.
  * 
  * Our game also tracks the number of bounces and syncs the game update loop
  * with the monitor's refresh rate.
@@ -29,6 +35,7 @@ public class BounceGame extends BasicGame {
 
 	private Ball ball;
 	private int bounces;
+	private ArrayList<Bang> explosions;
 
 	/**
 	 * Create the BounceGame frame, saving the width and height for later use.
@@ -46,6 +53,7 @@ public class BounceGame extends BasicGame {
 		ScreenWidth = width;
 
 		Entity.setCoarseGrainedCollisionBoundary(Entity.AABB);
+		explosions = new ArrayList<Bang>(10);
 	}
 
 	/**
@@ -68,18 +76,19 @@ public class BounceGame extends BasicGame {
 	}
 
 	/**
-	 * Render the game state. For now, just draw the ball & number of bounces.
+	 * Render the game state.
 	 */
 	@Override
 	public void render(GameContainer container, Graphics g)
 			throws SlickException {
 		ball.render(g);
 		g.drawString("Bounces: " + bounces, 10, 30);
+		for (Bang b : explosions)
+			b.render(g);
 	}
 
 	/**
-	 * Update the game state. For now, we're just bouncing the ball & counting
-	 * bounces.
+	 * Update the game state based on the events that transpire in this frame.
 	 */
 	@Override
 	public void update(GameContainer container, int delta)
@@ -98,9 +107,17 @@ public class BounceGame extends BasicGame {
 		}
 		if (bounced) {
 			bounces++;
+			explosions.add(new Bang(ball.getX(), ball.getY()));
+		}
+		ball.update(delta);
+
+		// check if there are any finished explosions, if so remove them
+		for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
+			if (!i.next().isActive()) {
+				i.remove();
+			}
 		}
 
-		ball.update(delta);
 	}
 
 	public static void main(String[] args) {
@@ -176,6 +193,28 @@ public class BounceGame extends BasicGame {
 							.getImage("resource/brokenball.png"));
 				}
 			}
+		}
+	}
+
+	/**
+	 * A class representing a transient explosion. The game should monitor
+	 * explosions to determine when they are no longer active and remove/hide
+	 * them at that point.
+	 */
+	class Bang extends Entity {
+		private Animation explosion;
+
+		public Bang(final float x, final float y) {
+			super(x, y);
+			explosion = new Animation(ResourceManager.getSpriteSheet(
+					"resource/explosion.png", 64, 64), 0, 0, 22, 0, true, 50,
+					true);
+			addAnimation(explosion);
+			explosion.setLooping(false);
+		}
+
+		public boolean isActive() {
+			return !explosion.isStopped();
 		}
 	}
 
