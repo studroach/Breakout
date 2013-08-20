@@ -14,7 +14,10 @@ import org.newdawn.slick.SlickException;
  * A Simple Game of Bounce.
  * 
  * Our game now displays a moving rectangular "ball" that bounces off the sides
- * of the game container.
+ * of the game container, and appears broken for a short time after a bounce.
+ * 
+ * Our game also tracks the number of bounces and syncs the game update loop
+ * with the monitor's refresh rate.
  * 
  * 
  * @author wallaces
@@ -24,7 +27,8 @@ public class BounceGame extends BasicGame {
 	private final int ScreenWidth;
 	private final int ScreenHeight;
 
-	Ball ball;
+	private Ball ball;
+	private int bounces;
 
 	/**
 	 * Create the BounceGame frame, saving the width and height for later use.
@@ -53,31 +57,49 @@ public class BounceGame extends BasicGame {
 	@Override
 	public void init(GameContainer container) throws SlickException {
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
+		newGame();
 	}
 
 	/**
-	 * Render the game state. For now, just draw the ball.
+	 * Prepare for a new game (after one time initialization)
+	 */
+	public void newGame() {
+		bounces = 0;
+	}
+
+	/**
+	 * Render the game state. For now, just draw the ball & number of bounces.
 	 */
 	@Override
 	public void render(GameContainer container, Graphics g)
 			throws SlickException {
 		ball.render(g);
+		g.drawString("Bounces: " + bounces, 10, 30);
 	}
 
 	/**
-	 * Update the game state. For now, we're just bouncing the ball.
+	 * Update the game state. For now, we're just bouncing the ball & counting
+	 * bounces.
 	 */
 	@Override
 	public void update(GameContainer container, int delta)
 			throws SlickException {
+
 		// bounce the ball...
+		boolean bounced = false;
 		if (ball.getCoarseGrainedMaxX() > ScreenWidth
 				|| ball.getCoarseGrainedMinX() < 0) {
 			ball.bounce(90);
+			bounced = true;
 		} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
 				|| ball.getCoarseGrainedMinY() < 0) {
 			ball.bounce(0);
+			bounced = true;
 		}
+		if (bounced) {
+			bounces++;
+		}
+
 		ball.update(delta);
 	}
 
@@ -86,6 +108,7 @@ public class BounceGame extends BasicGame {
 		try {
 			app = new AppGameContainer(new BounceGame("Bounce!", 800, 600));
 			app.setDisplayMode(800, 600, false);
+			app.setVSync(true);
 			app.start();
 		} catch (SlickException e) {
 			e.printStackTrace();
@@ -103,7 +126,7 @@ public class BounceGame extends BasicGame {
 
 		private Vector velocity;
 		private int countdown;
-		
+
 		public Ball(final float x, final float y, final float vx, final float vy) {
 			super(x, y);
 			addImageWithBoundingBox(ResourceManager
