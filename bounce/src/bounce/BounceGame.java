@@ -94,18 +94,22 @@ public class BounceGame extends BasicGame {
 	}
 
 	/**
-	 * The Ball class is an Entity that has a velocity (since it's moving).
+	 * The Ball class is an Entity that has a velocity (since it's moving). When
+	 * the Ball bounces off a surface, it temporarily displays a image with
+	 * cracks for a nice visual effect.
 	 * 
 	 */
 	class Ball extends Entity {
 
 		private Vector velocity;
-
+		private int countdown;
+		
 		public Ball(final float x, final float y, final float vx, final float vy) {
 			super(x, y);
 			addImageWithBoundingBox(ResourceManager
 					.getImage("resource/ball.png"));
 			velocity = new Vector(vx, vy);
+			countdown = 0;
 		}
 
 		public void setVelocity(final Vector v) {
@@ -125,6 +129,10 @@ public class BounceGame extends BasicGame {
 		 * @param surfaceTangent
 		 */
 		public void bounce(float surfaceTangent) {
+			ball.removeImage(ResourceManager.getImage("resource/ball.png"));
+			ball.addImageWithBoundingBox(ResourceManager
+					.getImage("resource/brokenball.png"));
+			countdown = 500;
 			velocity = velocity.bounce(surfaceTangent);
 		}
 
@@ -136,6 +144,15 @@ public class BounceGame extends BasicGame {
 		 */
 		public void update(final int delta) {
 			translate(velocity.scale(delta));
+			if (countdown > 0) {
+				countdown -= delta;
+				if (countdown <= 0) {
+					ball.addImageWithBoundingBox(ResourceManager
+							.getImage("resource/ball.png"));
+					ball.removeImage(ResourceManager
+							.getImage("resource/brokenball.png"));
+				}
+			}
 		}
 	}
 
