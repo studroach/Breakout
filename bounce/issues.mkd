@@ -1,11 +1,11 @@
 ## Resolved Issues ##
 
 - **[1]** Need a skeletal, executable game
+- **[2]** Add a bouncing ball
 
 
 ## Open Issues ##
 
-- **[2]** Add a bouncing ball
 - **[3]** Add initial eyecandy, score tracking and bounce counter
  
 
