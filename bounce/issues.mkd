@@ -4,10 +4,9 @@
 - **[2]** Add a bouncing ball
 - **[3]** Add initial eyecandy, score tracking and bounce counter
 - **[4]** Add keyboard controls for ball
+- **[5]** Add StartUp and GameOver states
 
 ## Open Issues ##
-
  
-- **[5]** Add StartUp and GameOver states
 - **[6]** Add explosion sounds
 
