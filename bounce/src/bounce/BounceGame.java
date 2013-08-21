@@ -12,15 +12,17 @@ import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
+import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 
 /**
  * A Simple Game of Bounce.
  * 
  * Our game now displays a moving rectangular "ball" that bounces off the sides
- * of the game container. When the ball bounces, it appears broken for a short
- * time afterwards and an explosion animation is played at the impact site to
- * add a bit of eye-candy.
+ * of the game container. The ball can be controlled by input from the user.
+ * 
+ * When the ball bounces, it appears broken for a short time afterwards and an
+ * explosion animation is played at the impact site to add a bit of eye-candy.
  * 
  * Our game also tracks the number of bounces and syncs the game update loop
  * with the monitor's refresh rate.
@@ -88,11 +90,28 @@ public class BounceGame extends BasicGame {
 	}
 
 	/**
-	 * Update the game state based on the events that transpire in this frame.
+	 * Update the game state based on user input and events that transpire in
+	 * this frame.
 	 */
 	@Override
 	public void update(GameContainer container, int delta)
 			throws SlickException {
+
+		// get user input
+		Input input = container.getInput();
+
+		if (input.isKeyDown(Input.KEY_W)) {
+			ball.setVelocity(ball.getVelocity().add(new Vector(0f, -.001f)));
+		}
+		if (input.isKeyDown(Input.KEY_S)) {
+			ball.setVelocity(ball.getVelocity().add(new Vector(0f, +.001f)));
+		}
+		if (input.isKeyDown(Input.KEY_A)) {
+			ball.setVelocity(ball.getVelocity().add(new Vector(-.001f, 0)));
+		}
+		if (input.isKeyDown(Input.KEY_D)) {
+			ball.setVelocity(ball.getVelocity().add(new Vector(+.001f, 0f)));
+		}
 
 		// bounce the ball...
 		boolean bounced = false;
