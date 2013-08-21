@@ -18,8 +18,14 @@ import org.newdawn.slick.SlickException;
 /**
  * A Simple Game of Bounce.
  * 
- * Our game now displays a moving rectangular "ball" that bounces off the sides
- * of the game container. The ball can be controlled by input from the user.
+ * The game has three states: StartUp, Playing, and GameOver, the game
+ * progresses through these states based on the user's input and the events that
+ * occur. Each state is modestly different in terms of what is displayed and
+ * what input is accepted.
+ * 
+ * In the playing state, our game displays a moving rectangular "ball" that
+ * bounces off the sides of the game container. The ball can be controlled by
+ * input from the user.
  * 
  * When the ball bounces, it appears broken for a short time afterwards and an
  * explosion animation is played at the impact site to add a bit of eye-candy.
@@ -27,17 +33,26 @@ import org.newdawn.slick.SlickException;
  * Our game also tracks the number of bounces and syncs the game update loop
  * with the monitor's refresh rate.
  * 
+ * Graphics resources courtesy of qubodup:
+ *  - http://opengameart.org/content/bomb-explosion-animation
+ *   
  * 
  * @author wallaces
  * 
  */
 public class BounceGame extends BasicGame {
+	private static final int START_UP = 1;
+	private static final int PLAYING = 2;
+	private static final int GAME_OVER = 3;
+
 	private final int ScreenWidth;
 	private final int ScreenHeight;
 
 	private Ball ball;
 	private int bounces;
 	private ArrayList<Bang> explosions;
+	private int gameState;
+	private int gameOverTimer;
 
 	/**
 	 * Create the BounceGame frame, saving the width and height for later use.
@@ -67,14 +82,30 @@ public class BounceGame extends BasicGame {
 	@Override
 	public void init(GameContainer container) throws SlickException {
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
-		newGame();
+		startUp();
+	}
+
+	/**
+	 * Put the game in 'demo' mode to lure new players!
+	 */
+	public void startUp() {
+		gameState = START_UP;
 	}
 
 	/**
 	 * Prepare for a new game (after one time initialization)
 	 */
 	public void newGame() {
+		gameState = PLAYING;
 		bounces = 0;
+	}
+
+	/**
+	 * Put the game in the GameOver state, which will last for a limited time.
+	 */
+	public void gameOver() {
+		gameState = GAME_OVER;
+		gameOverTimer = 4000;
 	}
 
 	/**
@@ -83,10 +114,29 @@ public class BounceGame extends BasicGame {
 	@Override
 	public void render(GameContainer container, Graphics g)
 			throws SlickException {
-		ball.render(g);
-		g.drawString("Bounces: " + bounces, 10, 30);
-		for (Bang b : explosions)
-			b.render(g);
+		switch (gameState) {
+		case PLAYING:
+			ball.render(g);
+			g.drawString("Bounces: " + bounces, 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+			break;
+		case START_UP:
+			ball.render(g);
+			g.drawString("Bounces: ?", 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+			g.drawImage(ResourceManager.getImage("resource/PressSpace.png"),
+					225, 270);
+			break;
+		case GAME_OVER:
+			g.drawString("Bounces: " + bounces, 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+			g.drawImage(ResourceManager.getImage("resource/GameOver.png"), 225,
+					270);
+			break;
+		}
 	}
 
 	/**
@@ -97,38 +147,54 @@ public class BounceGame extends BasicGame {
 	public void update(GameContainer container, int delta)
 			throws SlickException {
 
-		// get user input
-		Input input = container.getInput();
+		// in the GameOver state we just updated the explosions and wait until
+		// the state switches... The ball is invisible and paralyzed.
+		if (gameState == GAME_OVER) {
+			gameOverTimer -= delta;
+			if (gameOverTimer <= 0)
+				startUp();
+		} else {
+			// get user input
+			Input input = container.getInput();
 
-		if (input.isKeyDown(Input.KEY_W)) {
-			ball.setVelocity(ball.getVelocity().add(new Vector(0f, -.001f)));
+			if (gameState == START_UP) {
+				if (input.isKeyDown(Input.KEY_SPACE))
+					newGame();
+			} else {
+				if (input.isKeyDown(Input.KEY_W)) {
+					ball.setVelocity(ball.getVelocity().add(
+							new Vector(0f, -.001f)));
+				}
+				if (input.isKeyDown(Input.KEY_S)) {
+					ball.setVelocity(ball.getVelocity().add(
+							new Vector(0f, +.001f)));
+				}
+				if (input.isKeyDown(Input.KEY_A)) {
+					ball.setVelocity(ball.getVelocity().add(
+							new Vector(-.001f, 0)));
+				}
+				if (input.isKeyDown(Input.KEY_D)) {
+					ball.setVelocity(ball.getVelocity().add(
+							new Vector(+.001f, 0f)));
+				}
+			}
+			// bounce the ball...
+			boolean bounced = false;
+			if (ball.getCoarseGrainedMaxX() > ScreenWidth
+					|| ball.getCoarseGrainedMinX() < 0) {
+				ball.bounce(90);
+				bounced = true;
+			} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
+					|| ball.getCoarseGrainedMinY() < 0) {
+				ball.bounce(0);
+				bounced = true;
+			}
+			if (bounced) {
+				explosions.add(new Bang(ball.getX(), ball.getY()));
+				bounces++;
+			}
+			ball.update(delta);
 		}
-		if (input.isKeyDown(Input.KEY_S)) {
-			ball.setVelocity(ball.getVelocity().add(new Vector(0f, +.001f)));
-		}
-		if (input.isKeyDown(Input.KEY_A)) {
-			ball.setVelocity(ball.getVelocity().add(new Vector(-.001f, 0)));
-		}
-		if (input.isKeyDown(Input.KEY_D)) {
-			ball.setVelocity(ball.getVelocity().add(new Vector(+.001f, 0f)));
-		}
-
-		// bounce the ball...
-		boolean bounced = false;
-		if (ball.getCoarseGrainedMaxX() > ScreenWidth
-				|| ball.getCoarseGrainedMinX() < 0) {
-			ball.bounce(90);
-			bounced = true;
-		} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
-				|| ball.getCoarseGrainedMinY() < 0) {
-			ball.bounce(0);
-			bounced = true;
-		}
-		if (bounced) {
-			bounces++;
-			explosions.add(new Bang(ball.getX(), ball.getY()));
-		}
-		ball.update(delta);
 
 		// check if there are any finished explosions, if so remove them
 		for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
@@ -137,6 +203,9 @@ public class BounceGame extends BasicGame {
 			}
 		}
 
+		if (gameState == PLAYING && bounces >= 10) {
+			gameOver();
+		}
 	}
 
 	public static void main(String[] args) {
