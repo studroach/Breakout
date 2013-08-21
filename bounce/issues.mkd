@@ -7,4 +7,7 @@
 ## Open Issues ##
 
  
+- **[4]** Add keyboard controls for ball
+- **[5]** Add StartUp and GameOver states
+- **[6]** Add explosion sounds
 
