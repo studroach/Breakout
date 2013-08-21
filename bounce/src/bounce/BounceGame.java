@@ -28,14 +28,19 @@ import org.newdawn.slick.SlickException;
  * input from the user.
  * 
  * When the ball bounces, it appears broken for a short time afterwards and an
- * explosion animation is played at the impact site to add a bit of eye-candy.
+ * explosion animation is played at the impact site to add a bit of eye-candy
+ * additionally, we play a short explosion sound effect when the game is
+ * actively being played.
  * 
  * Our game also tracks the number of bounces and syncs the game update loop
  * with the monitor's refresh rate.
  * 
  * Graphics resources courtesy of qubodup:
- *  - http://opengameart.org/content/bomb-explosion-animation
- *   
+ * http://opengameart.org/content/bomb-explosion-animation
+ * 
+ * Sound resources courtesy of DJ Chronos:
+ * http://www.freesound.org/people/DJ%20Chronos/sounds/123236/
+ * 
  * 
  * @author wallaces
  * 
@@ -82,22 +87,31 @@ public class BounceGame extends BasicGame {
 	@Override
 	public void init(GameContainer container) throws SlickException {
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
-		startUp();
+
+		// the sound resource takes a particularly long time to load,
+		// we preload it here to (1) reduce latency when we first play it
+		// and (2) because loading it will load the audio libraries and
+		// unless that is done now, we can't *disable* sound as we
+		// attempt to do in the startUp() method.
+		ResourceManager.loadSound("resource/explosion.wav");
+		startUp(container);
 	}
 
 	/**
 	 * Put the game in 'demo' mode to lure new players!
 	 */
-	public void startUp() {
+	public void startUp(GameContainer container) {
 		gameState = START_UP;
+		container.setSoundOn(false);
 	}
 
 	/**
 	 * Prepare for a new game (after one time initialization)
 	 */
-	public void newGame() {
+	public void newGame(GameContainer container) {
 		gameState = PLAYING;
 		bounces = 0;
+		container.setSoundOn(true);
 	}
 
 	/**
@@ -152,14 +166,14 @@ public class BounceGame extends BasicGame {
 		if (gameState == GAME_OVER) {
 			gameOverTimer -= delta;
 			if (gameOverTimer <= 0)
-				startUp();
+				startUp(container);
 		} else {
 			// get user input
 			Input input = container.getInput();
 
 			if (gameState == START_UP) {
 				if (input.isKeyDown(Input.KEY_SPACE))
-					newGame();
+					newGame(container);
 			} else {
 				if (input.isKeyDown(Input.KEY_W)) {
 					ball.setVelocity(ball.getVelocity().add(
@@ -299,6 +313,7 @@ public class BounceGame extends BasicGame {
 					true);
 			addAnimation(explosion);
 			explosion.setLooping(false);
+			ResourceManager.getSound("resource/explosion.wav").play();
 		}
 
 		public boolean isActive() {
