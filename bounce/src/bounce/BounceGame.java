@@ -9,11 +9,14 @@ import jig.Vector;
 
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.AppGameContainer;
-import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.state.BasicGameState;
+import org.newdawn.slick.state.StateBasedGame;
+import org.newdawn.slick.state.transition.EmptyTransition;
+import org.newdawn.slick.state.transition.HorizontalSplitTransition;
 
 /**
  * A Simple Game of Bounce.
@@ -45,10 +48,7 @@ import org.newdawn.slick.SlickException;
  * @author wallaces
  * 
  */
-public class BounceGame extends BasicGame {
-	private static final int START_UP = 1;
-	private static final int PLAYING = 2;
-	private static final int GAME_OVER = 3;
+public class BounceGame extends StateBasedGame {
 
 	private final int ScreenWidth;
 	private final int ScreenHeight;
@@ -56,8 +56,6 @@ public class BounceGame extends BasicGame {
 	private Ball ball;
 	private int bounces;
 	private ArrayList<Bang> explosions;
-	private int gameState;
-	private int gameOverTimer;
 
 	/**
 	 * Create the BounceGame frame, saving the width and height for later use.
@@ -76,152 +74,16 @@ public class BounceGame extends BasicGame {
 
 		Entity.setCoarseGrainedCollisionBoundary(Entity.AABB);
 		explosions = new ArrayList<Bang>(10);
+		
+		addState(new StartUpState());
+		addState(new GameOverState());
+		addState(new PlayingState());
+		
+		enterState(0);
 	}
 
-	/**
-	 * Initialize the game after the container has been set up. This is one-time
-	 * initialization, and a good place to do things like load sounds and
-	 * graphics...
-	 * 
-	 */
-	@Override
-	public void init(GameContainer container) throws SlickException {
-		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
 
-		// the sound resource takes a particularly long time to load,
-		// we preload it here to (1) reduce latency when we first play it
-		// and (2) because loading it will load the audio libraries and
-		// unless that is done now, we can't *disable* sound as we
-		// attempt to do in the startUp() method.
-		ResourceManager.loadSound("resource/explosion.wav");
-		startUp(container);
-	}
-
-	/**
-	 * Put the game in 'demo' mode to lure new players!
-	 */
-	public void startUp(GameContainer container) {
-		gameState = START_UP;
-		container.setSoundOn(false);
-	}
-
-	/**
-	 * Prepare for a new game (after one time initialization)
-	 */
-	public void newGame(GameContainer container) {
-		gameState = PLAYING;
-		bounces = 0;
-		container.setSoundOn(true);
-	}
-
-	/**
-	 * Put the game in the GameOver state, which will last for a limited time.
-	 */
-	public void gameOver() {
-		gameState = GAME_OVER;
-		gameOverTimer = 4000;
-	}
-
-	/**
-	 * Render the game state.
-	 */
-	@Override
-	public void render(GameContainer container, Graphics g)
-			throws SlickException {
-		switch (gameState) {
-		case PLAYING:
-			ball.render(g);
-			g.drawString("Bounces: " + bounces, 10, 30);
-			for (Bang b : explosions)
-				b.render(g);
-			break;
-		case START_UP:
-			ball.render(g);
-			g.drawString("Bounces: ?", 10, 30);
-			for (Bang b : explosions)
-				b.render(g);
-			g.drawImage(ResourceManager.getImage("resource/PressSpace.png"),
-					225, 270);
-			break;
-		case GAME_OVER:
-			g.drawString("Bounces: " + bounces, 10, 30);
-			for (Bang b : explosions)
-				b.render(g);
-			g.drawImage(ResourceManager.getImage("resource/GameOver.png"), 225,
-					270);
-			break;
-		}
-	}
-
-	/**
-	 * Update the game state based on user input and events that transpire in
-	 * this frame.
-	 */
-	@Override
-	public void update(GameContainer container, int delta)
-			throws SlickException {
-
-		// in the GameOver state we just updated the explosions and wait until
-		// the state switches... The ball is invisible and paralyzed.
-		if (gameState == GAME_OVER) {
-			gameOverTimer -= delta;
-			if (gameOverTimer <= 0)
-				startUp(container);
-		} else {
-			// get user input
-			Input input = container.getInput();
-
-			if (gameState == START_UP) {
-				if (input.isKeyDown(Input.KEY_SPACE))
-					newGame(container);
-			} else {
-				if (input.isKeyDown(Input.KEY_W)) {
-					ball.setVelocity(ball.getVelocity().add(
-							new Vector(0f, -.001f)));
-				}
-				if (input.isKeyDown(Input.KEY_S)) {
-					ball.setVelocity(ball.getVelocity().add(
-							new Vector(0f, +.001f)));
-				}
-				if (input.isKeyDown(Input.KEY_A)) {
-					ball.setVelocity(ball.getVelocity().add(
-							new Vector(-.001f, 0)));
-				}
-				if (input.isKeyDown(Input.KEY_D)) {
-					ball.setVelocity(ball.getVelocity().add(
-							new Vector(+.001f, 0f)));
-				}
-			}
-			// bounce the ball...
-			boolean bounced = false;
-			if (ball.getCoarseGrainedMaxX() > ScreenWidth
-					|| ball.getCoarseGrainedMinX() < 0) {
-				ball.bounce(90);
-				bounced = true;
-			} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
-					|| ball.getCoarseGrainedMinY() < 0) {
-				ball.bounce(0);
-				bounced = true;
-			}
-			if (bounced) {
-				explosions.add(new Bang(ball.getX(), ball.getY()));
-				bounces++;
-			}
-			ball.update(delta);
-		}
-
-		// check if there are any finished explosions, if so remove them
-		for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
-			if (!i.next().isActive()) {
-				i.remove();
-			}
-		}
-
-		if (gameState == PLAYING && bounces >= 10) {
-			gameOver();
-		}
-	}
-
+	
 	public static void main(String[] args) {
 		AppGameContainer app;
 		try {
@@ -320,5 +182,204 @@ public class BounceGame extends BasicGame {
 			return !explosion.isStopped();
 		}
 	}
+	
+	class StartUpState extends BasicGameState {
 
+		@Override
+		public void init(GameContainer container, StateBasedGame game)
+				throws SlickException {
+			ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
+
+			// the sound resource takes a particularly long time to load,
+			// we preload it here to (1) reduce latency when we first play it
+			// and (2) because loading it will load the audio libraries and
+			// unless that is done now, we can't *disable* sound as we
+			// attempt to do in the startUp() method.
+			ResourceManager.loadSound("resource/explosion.wav");	
+
+			System.out.println("StartUpState init!");
+		}
+		@Override
+		public void enter(GameContainer container, StateBasedGame game) {
+			container.setSoundOn(false);
+			System.out.println("StartUpState enter!");
+		}
+
+
+		@Override
+		public void render(GameContainer container, StateBasedGame game,
+				Graphics g) throws SlickException {
+			ball.render(g);
+			g.drawString("Bounces: ?", 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+			g.drawImage(ResourceManager.getImage("resource/PressSpace.png"),
+					225, 270);		
+		}
+
+		@Override
+		public void update(GameContainer container, StateBasedGame game,
+				int delta) throws SlickException {
+			Input input = container.getInput();
+			if (input.isKeyDown(Input.KEY_SPACE))
+				enterState(1);	
+			
+			// bounce the ball...
+			boolean bounced = false;
+			if (ball.getCoarseGrainedMaxX() > ScreenWidth
+					|| ball.getCoarseGrainedMinX() < 0) {
+				ball.bounce(90);
+				bounced = true;
+			} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
+					|| ball.getCoarseGrainedMinY() < 0) {
+				ball.bounce(0);
+				bounced = true;
+			}
+			if (bounced) {
+				explosions.add(new Bang(ball.getX(), ball.getY()));
+				bounces++;
+			}
+			ball.update(delta);
+
+			// check if there are any finished explosions, if so remove them
+			for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
+				if (!i.next().isActive()) {
+					i.remove();
+				}
+			}
+
+		}
+
+		@Override
+		public int getID() {
+			return 0;
+		}
+		
+	}
+
+	class PlayingState extends BasicGameState {
+
+		@Override
+		public void init(GameContainer container, StateBasedGame game)
+				throws SlickException {
+		}
+
+		@Override
+		public void enter(GameContainer container, StateBasedGame game) {
+			bounces = 0;
+			container.setSoundOn(true);
+		}
+		@Override
+		public void render(GameContainer container, StateBasedGame game,
+				Graphics g) throws SlickException {
+			ball.render(g);
+			g.drawString("Bounces: " + bounces, 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+		}
+
+		@Override
+		public void update(GameContainer container, StateBasedGame game,
+				int delta) throws SlickException {
+
+			Input input = container.getInput();
+
+			if (input.isKeyDown(Input.KEY_W)) {
+				ball.setVelocity(ball.getVelocity().add(new Vector(0f, -.001f)));
+			}
+			if (input.isKeyDown(Input.KEY_S)) {
+				ball.setVelocity(ball.getVelocity().add(new Vector(0f, +.001f)));
+			}
+			if (input.isKeyDown(Input.KEY_A)) {
+				ball.setVelocity(ball.getVelocity().add(new Vector(-.001f, 0)));
+			}
+			if (input.isKeyDown(Input.KEY_D)) {
+				ball.setVelocity(ball.getVelocity().add(new Vector(+.001f, 0f)));
+			}
+			// bounce the ball...
+			boolean bounced = false;
+			if (ball.getCoarseGrainedMaxX() > ScreenWidth
+					|| ball.getCoarseGrainedMinX() < 0) {
+				ball.bounce(90);
+				bounced = true;
+			} else if (ball.getCoarseGrainedMaxY() > ScreenHeight
+					|| ball.getCoarseGrainedMinY() < 0) {
+				ball.bounce(0);
+				bounced = true;
+			}
+			if (bounced) {
+				explosions.add(new Bang(ball.getX(), ball.getY()));
+				bounces++;
+			}
+			ball.update(delta);
+
+			// check if there are any finished explosions, if so remove them
+			for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
+				if (!i.next().isActive()) {
+					i.remove();
+				}
+			}
+
+			if (bounces >= 10) {
+				game.enterState(2);
+			}
+		}
+
+		@Override
+		public int getID() {
+			return 1;
+		}
+		
+	}
+	
+	class GameOverState extends BasicGameState {
+		int timer;
+		
+		@Override
+		public void init(GameContainer container, StateBasedGame game)
+				throws SlickException {
+		}
+		@Override
+		public void enter(GameContainer container, StateBasedGame game) {
+			timer = 4000;
+		}
+
+		@Override
+		public void render(GameContainer container, StateBasedGame game,
+				Graphics g) throws SlickException {
+			g.drawString("Bounces: " + bounces, 10, 30);
+			for (Bang b : explosions)
+				b.render(g);
+			g.drawImage(ResourceManager.getImage("resource/GameOver.png"), 225,
+					270);
+
+		}
+
+		@Override
+		public void update(GameContainer container, StateBasedGame game,
+				int delta) throws SlickException {
+			timer -= delta;
+			if (timer <= 0)
+				game.enterState(0, new EmptyTransition(), new HorizontalSplitTransition() );
+			// check if there are any finished explosions, if so remove them
+			for (Iterator<Bang> i = explosions.iterator(); i.hasNext();) {
+				if (!i.next().isActive()) {
+					i.remove();
+				}
+			}
+
+		}
+
+		@Override
+		public int getID() {
+			return 2;
+		}
+		
+	}
+
+	@Override
+	public void initStatesList(GameContainer container) throws SlickException {
+		// TODO Auto-generated method stub
+		
+	}
 }
