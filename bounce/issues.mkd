@@ -9,4 +9,4 @@
 
 ## Open Issues ##
  
-
+- **[7]** Use a proper Slick StateBasedGame.
