@@ -10,3 +10,4 @@
 
 ## Open Issues ##
  
+- **[8]** Use fully specified resource path, preload resources if possible
