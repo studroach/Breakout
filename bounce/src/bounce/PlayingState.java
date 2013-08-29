@@ -12,6 +12,16 @@ import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
 
+/**
+ * This state is active when the Game is being played. In this state, sound is
+ * turned on, the bounce counter begins at 0 and increases until 10 at which
+ * point a transition to the Game Over state is initiated. The user can also
+ * control the ball using the WAS & D keys.
+ * 
+ * Transitions From StartUpState
+ * 
+ * Transitions To GameOverState
+ */
 class PlayingState extends BasicGameState {
 	int bounces;
 	
@@ -80,7 +90,7 @@ class PlayingState extends BasicGameState {
 		}
 
 		if (bounces >= 10) {
-			((GameOverState)game.getState(2)).lastKnownBounces = bounces;
+			((GameOverState)game.getState(BounceGame.GAMEOVERSTATE)).setUserScore(bounces);
 			game.enterState(BounceGame.GAMEOVERSTATE);
 		}
 	}

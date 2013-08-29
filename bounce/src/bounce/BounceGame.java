@@ -3,6 +3,7 @@ package bounce;
 import java.util.ArrayList;
 
 import jig.Entity;
+import jig.ResourceManager;
 
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.GameContainer;
@@ -78,6 +79,13 @@ public class BounceGame extends StateBasedGame {
 		addState(new GameOverState());
 		addState(new PlayingState());
 		
+		// the sound resource takes a particularly long time to load,
+		// we preload it here to (1) reduce latency when we first play it
+		// and (2) because loading it will load the audio libraries and
+		// unless that is done now, we can't *disable* sound as we
+		// attempt to do in the startUp() method.
+		ResourceManager.loadSound("resource/explosion.wav");	
+
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
 
 	}

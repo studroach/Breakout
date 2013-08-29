@@ -11,22 +11,23 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
-
+/**
+ * This state is active prior to the Game starting. In this state, sound is
+ * turned off, and the bounce counter shows '?'. The user can only interact with
+ * the game by pressing the SPACE key which transitions to the Playing State.
+ * Otherwise, all game objects are rendered and updated normally.
+ * 
+ * Transitions From (Initialization), GameOverState
+ * 
+ * Transitions To PlayingState
+ */
 class StartUpState extends BasicGameState {
 
 	@Override
 	public void init(GameContainer container, StateBasedGame game)
 			throws SlickException {
-		
-
-		// the sound resource takes a particularly long time to load,
-		// we preload it here to (1) reduce latency when we first play it
-		// and (2) because loading it will load the audio libraries and
-		// unless that is done now, we can't *disable* sound as we
-		// attempt to do in the startUp() method.
-		ResourceManager.loadSound("resource/explosion.wav");	
-
 	}
+	
 	@Override
 	public void enter(GameContainer container, StateBasedGame game) {
 		container.setSoundOn(false);
