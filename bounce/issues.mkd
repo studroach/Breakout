@@ -7,7 +7,7 @@
 - **[5]** Add StartUp and GameOver states
 - **[6]** Add explosion sound
 - **[7]** Use a proper Slick StateBasedGame.
+- **[8]** Use fully specified resource path, preload resources if possible
 
 ## Open Issues ##
  
-- **[8]** Use fully specified resource path, preload resources if possible
