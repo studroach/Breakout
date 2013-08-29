@@ -16,11 +16,11 @@ class Bang extends Entity {
 	public Bang(final float x, final float y) {
 		super(x, y);
 		explosion = new Animation(ResourceManager.getSpriteSheet(
-				"resource/explosion.png", 64, 64), 0, 0, 22, 0, true, 50,
+				BounceGame.BANG_EXPLOSIONIMG_RSC, 64, 64), 0, 0, 22, 0, true, 50,
 				true);
 		addAnimation(explosion);
 		explosion.setLooping(false);
-		ResourceManager.getSound("resource/explosion.wav").play();
+		ResourceManager.getSound(BounceGame.BANG_EXPLOSIONSND_RSC).play();
 	}
 
 	public boolean isActive() {
