@@ -1,6 +1,7 @@
 package bounce;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import jig.Entity;
 import jig.ResourceManager;
@@ -103,16 +104,17 @@ public class BounceGame extends StateBasedGame {
 		ResourceManager.loadImage(STARTUP_BANNER_RSC);
 		ResourceManager.loadImage(BANG_EXPLOSIONIMG_RSC);
 		
-		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, .1f, .2f);
-		paddle = new Paddle(ScreenWidth / 2, ScreenHeight / 2);
+		Random rand = new Random();
+		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, (float)(rand.nextFloat() -.5), .3f);
+		paddle = new Paddle(ScreenWidth / 2, ScreenHeight - 10);
 
 	}
 	
 	public static void main(String[] args) {
 		AppGameContainer app;
 		try {
-			app = new AppGameContainer(new BounceGame("Bounce!", 800, 600));
-			app.setDisplayMode(800, 600, false);
+			app = new AppGameContainer(new BounceGame("Bounce!", 1100, 800));
+			app.setDisplayMode(1100, 800, false);
 			app.setVSync(true);
 			app.start();
 		} catch (SlickException e) {

@@ -1,6 +1,7 @@
 package bounce;
 
 import java.util.Iterator;
+import java.util.Random;
 
 import jig.Vector;
 
@@ -24,6 +25,7 @@ import org.newdawn.slick.state.StateBasedGame;
  */
 class PlayingState extends BasicGameState {
 	int bounces;
+	int lives;
 	
 	@Override
 	public void init(GameContainer container, StateBasedGame game)
@@ -33,6 +35,7 @@ class PlayingState extends BasicGameState {
 	@Override
 	public void enter(GameContainer container, StateBasedGame game) {
 		bounces = 0;
+		lives = 3;
 		container.setSoundOn(true);
 	}
 	@Override
@@ -41,7 +44,9 @@ class PlayingState extends BasicGameState {
 		BounceGame bg = (BounceGame)game;
 		
 		bg.ball.render(g);
+		bg.paddle.render(g);
 		g.drawString("Bounces: " + bounces, 10, 30);
+		g.drawString("Lives: " + lives, 10, 50);
 		for (Bang b : bg.explosions)
 			b.render(g);
 	}
@@ -53,34 +58,55 @@ class PlayingState extends BasicGameState {
 		Input input = container.getInput();
 		BounceGame bg = (BounceGame)game;
 		
-		if (input.isKeyDown(Input.KEY_W)) {
-			bg.ball.setVelocity(bg.ball.getVelocity().add(new Vector(0f, -.001f)));
+		if (input.isKeyDown(Input.KEY_A) && input.isKeyDown(Input.KEY_D)) {
+			bg.paddle.setVelocity(new Vector(0, 0));
+		}else if (input.isKeyDown(Input.KEY_D)) {
+			if(bg.paddle.getCoarseGrainedMaxX() > (bg.ScreenWidth - 10)) {
+				bg.paddle.setVelocity(new Vector(0, 0));
+			}else {
+				bg.paddle.setVelocity(new Vector(1, 0));
+			}
+		}else if (input.isKeyDown(Input.KEY_A)) {
+			if(bg.paddle.getCoarseGrainedMinX() < 10) {
+				bg.paddle.setVelocity(new Vector(0, 0));
+			}else {
+				bg.paddle.setVelocity(new Vector(-1, 0));
+			}
+		}else {
+			bg.paddle.setVelocity(new Vector(0, 0));
 		}
-		if (input.isKeyDown(Input.KEY_S)) {
-			bg.ball.setVelocity(bg.ball.getVelocity().add(new Vector(0f, +.001f)));
-		}
-		if (input.isKeyDown(Input.KEY_A)) {
-			bg.ball.setVelocity(bg.ball.getVelocity().add(new Vector(-.001f, 0)));
-		}
-		if (input.isKeyDown(Input.KEY_D)) {
-			bg.ball.setVelocity(bg.ball.getVelocity().add(new Vector(+.001f, 0f)));
-		}
+		
 		// bounce the ball...
 		boolean bounced = false;
+		int trackPaddle = bg.paddle.tracker(bg.ball);
 		if (bg.ball.getCoarseGrainedMaxX() > bg.ScreenWidth
 				|| bg.ball.getCoarseGrainedMinX() < 0) {
 			bg.ball.bounce(90);
 			bounced = true;
-		} else if (bg.ball.getCoarseGrainedMaxY() > bg.ScreenHeight
-				|| bg.ball.getCoarseGrainedMinY() < 0) {
+		} else if (bg.ball.getCoarseGrainedMinY() < 0) {
 			bg.ball.bounce(0);
+			bounced = true;
+		} else if (trackPaddle == 1) {
+			bg.ball.bounce(0);
+			bounced = true;
+		} else if (trackPaddle == 2) {
+			bg.ball.bounce(90);
 			bounced = true;
 		}
 		if (bounced) {
 			bg.explosions.add(new Bang(bg.ball.getX(), bg.ball.getY()));
 			bounces++;
 		}
+		if (bg.ball.getCoarseGrainedMaxY() > bg.ScreenHeight) {
+			lives--;
+			//respawn the ball it it hits the bottom
+			bg.ball.setPosition(bg.ScreenWidth / 2, bg.ScreenHeight / 2);
+			//gives the ball a new random velocity
+			Random rand = new Random();
+			bg.ball.setVelocity(new Vector( (float)(rand.nextFloat() -.5) , -.4f ));
+		}
 		bg.ball.update(delta);
+		bg.paddle.update(delta);
 
 		// check if there are any finished explosions, if so remove them
 		for (Iterator<Bang> i = bg.explosions.iterator(); i.hasNext();) {
@@ -89,7 +115,7 @@ class PlayingState extends BasicGameState {
 			}
 		}
 
-		if (bounces >= 10) {
+		if (lives <= 0) {
 			((GameOverState)game.getState(BounceGame.GAMEOVERSTATE)).setUserScore(bounces);
 			game.enterState(BounceGame.GAMEOVERSTATE);
 		}

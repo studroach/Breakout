@@ -40,11 +40,12 @@ class StartUpState extends BasicGameState {
 		BounceGame bg = (BounceGame)game;
 		
 		bg.ball.render(g);
+		bg.paddle.render(g);
 		g.drawString("Bounces: ?", 10, 30);
 		for (Bang b : bg.explosions)
 			b.render(g);
 		g.drawImage(ResourceManager.getImage(BounceGame.STARTUP_BANNER_RSC),
-				225, 270);		
+				bg.ScreenWidth/2 - 187, bg.ScreenHeight/2 - 30);		
 	}
 
 	@Override
@@ -59,6 +60,7 @@ class StartUpState extends BasicGameState {
 		
 		// bounce the ball...
 		boolean bounced = false;
+		int trackPaddle = bg.paddle.tracker(bg.ball);
 		if (bg.ball.getCoarseGrainedMaxX() > bg.ScreenWidth
 				|| bg.ball.getCoarseGrainedMinX() < 0) {
 			bg.ball.bounce(90);
@@ -66,6 +68,12 @@ class StartUpState extends BasicGameState {
 		} else if (bg.ball.getCoarseGrainedMaxY() > bg.ScreenHeight
 				|| bg.ball.getCoarseGrainedMinY() < 0) {
 			bg.ball.bounce(0);
+			bounced = true;
+		} else if (trackPaddle == 1) {
+			bg.ball.bounce(0);
+			bounced = true;
+		} else if (trackPaddle == 2) {
+			bg.ball.bounce(90);
 			bounced = true;
 		}
 		if (bounced) {

@@ -50,8 +50,8 @@ class GameOverState extends BasicGameState {
 		g.drawString("Bounces: " + lastKnownBounces, 10, 30);
 		for (Bang b : bg.explosions)
 			b.render(g);
-		g.drawImage(ResourceManager.getImage(BounceGame.GAMEOVER_BANNER_RSC), 225,
-				270);
+		g.drawImage(ResourceManager.getImage(BounceGame.GAMEOVER_BANNER_RSC),
+				(bg.ScreenWidth/2) - 175, (bg.ScreenHeight/2) - 30);
 
 	}
 
