@@ -54,12 +54,17 @@ public class BounceGame extends StateBasedGame {
 	public static final String BANG_EXPLOSIONIMG_RSC = "bounce/resource/explosion.png";
 	public static final String BANG_EXPLOSIONSND_RSC = "bounce/resource/explosion.wav";
 	public static final String PADDLE_RSC = "bounce/resource/paddle.png";
+	public static final String BRICK0_RSC = "bounce/resource/Brick0.png";
+	public static final String BRICK1_RSC = "bounce/resource/Brick1.png";
+	public static final String BRICK2_RSC = "bounce/resource/Brick2.png";
 
 	public final int ScreenWidth;
 	public final int ScreenHeight;
 
 	Ball ball;
 	Paddle paddle;
+	//mesh tracks brick positions
+	Mesh mesh;
 	ArrayList<Bang> explosions;
 
 	/**
@@ -103,10 +108,14 @@ public class BounceGame extends StateBasedGame {
 		ResourceManager.loadImage(GAMEOVER_BANNER_RSC);
 		ResourceManager.loadImage(STARTUP_BANNER_RSC);
 		ResourceManager.loadImage(BANG_EXPLOSIONIMG_RSC);
+		ResourceManager.loadImage(BRICK0_RSC);
+		ResourceManager.loadImage(BRICK1_RSC);
+		ResourceManager.loadImage(BRICK2_RSC);
 		
 		Random rand = new Random();
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, (float)(rand.nextFloat() -.5), .3f);
 		paddle = new Paddle(ScreenWidth / 2, ScreenHeight - 10);
+		mesh = new Mesh();
 
 	}
 	
