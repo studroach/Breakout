@@ -78,6 +78,7 @@ class StartUpState extends BasicGameState {
 		}
 		if (bounced) {
 			bg.explosions.add(new Bang(bg.ball.getX(), bg.ball.getY()));
+			bg.ball.update(delta);
 		}
 		bg.ball.update(delta);
 

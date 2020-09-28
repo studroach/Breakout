@@ -37,15 +37,21 @@ class PlayingState extends BasicGameState {
 		bounces = 0;
 		lives = 3;
 		container.setSoundOn(true);
+		BounceGame bg = (BounceGame)game;
+		bg.mesh.drawBricks(bg.level);
 	}
 	@Override
 	public void render(GameContainer container, StateBasedGame game,
 			Graphics g) throws SlickException {
 		BounceGame bg = (BounceGame)game;
 		
+		for(int i = 0; i < bg.mesh.xCount; i++) {
+			for(int j = 0; j < bg.mesh.yCount; j++) {
+				bg.mesh.index[i][j].render(g);
+			}
+		}
 		bg.ball.render(g);
 		bg.paddle.render(g);
-		bg.mesh.drawBricks(g);
 		g.drawString("Bounces: " + bounces, 10, 30);
 		g.drawString("Lives: " + lives, 10, 50);
 		for (Bang b : bg.explosions)
@@ -59,6 +65,18 @@ class PlayingState extends BasicGameState {
 		Input input = container.getInput();
 		BounceGame bg = (BounceGame)game;
 		
+		//testing level navigation
+		if (input.isKeyDown(Input.KEY_1)) {
+			bg.level = 1;
+			bg.enterState(BounceGame.PLAYINGSTATE);
+		}else if (input.isKeyDown(Input.KEY_2)) {
+			bg.level = 2;
+			bg.enterState(BounceGame.PLAYINGSTATE);
+		}else if (input.isKeyDown(Input.KEY_3)) {
+			bg.level = 3;
+			bg.enterState(BounceGame.PLAYINGSTATE);
+		}
+		//paddle controls
 		if (input.isKeyDown(Input.KEY_A) && input.isKeyDown(Input.KEY_D)) {
 			bg.paddle.setVelocity(new Vector(0, 0));
 		}else if (input.isKeyDown(Input.KEY_D)) {
@@ -80,6 +98,7 @@ class PlayingState extends BasicGameState {
 		// bounce the ball...
 		boolean bounced = false;
 		int trackPaddle = bg.paddle.tracker(bg.ball);
+		int brickBounce = bg.mesh.checkCollisions(bg.ball);
 		if (bg.ball.getCoarseGrainedMaxX() > bg.ScreenWidth
 				|| bg.ball.getCoarseGrainedMinX() < 0) {
 			bg.ball.bounce(90);
@@ -93,18 +112,26 @@ class PlayingState extends BasicGameState {
 		} else if (trackPaddle == 2) {
 			bg.ball.bounce(90);
 			bounced = true;
+		} else if (brickBounce == 1) {
+			bg.ball.bounce(90);
+			bounced = true;
+		} else if (brickBounce == 2) {
+			bg.ball.bounce(0);
+			bounced = true;
 		}
+		
 		if (bounced) {
 			bg.explosions.add(new Bang(bg.ball.getX(), bg.ball.getY()));
 			bounces++;
+			bg.ball.update(delta);
 		}
 		if (bg.ball.getCoarseGrainedMaxY() > bg.ScreenHeight) {
 			lives--;
-			//respawn the ball it it hits the bottom
-			bg.ball.setPosition(bg.ScreenWidth / 2, bg.ScreenHeight / 2);
+			//respawn the ball if it hits the bottom
+			bg.ball.setPosition(bg.ScreenWidth / 2, (bg.ScreenHeight / 6) * 5);
 			//gives the ball a new random velocity
 			Random rand = new Random();
-			bg.ball.setVelocity(new Vector( (float)(rand.nextFloat() -.5) , -.4f ));
+			bg.ball.setVelocity(new Vector( (float)(rand.nextFloat() -.5) , -.3f ));
 		}
 		bg.ball.update(delta);
 		bg.paddle.update(delta);
@@ -115,7 +142,12 @@ class PlayingState extends BasicGameState {
 				i.remove();
 			}
 		}
-
+		
+		if (bg.mesh.brickCount == 0) {
+			bg.level++;
+			bg.enterState(BounceGame.PLAYINGSTATE);
+		}
+		
 		if (lives <= 0) {
 			((GameOverState)game.getState(BounceGame.GAMEOVERSTATE)).setUserScore(bounces);
 			game.enterState(BounceGame.GAMEOVERSTATE);

@@ -47,6 +47,8 @@ public class BounceGame extends StateBasedGame {
 	public static final int PLAYINGSTATE = 1;
 	public static final int GAMEOVERSTATE = 2;
 	
+	public int level;
+	
 	public static final String BALL_BALLIMG_RSC = "bounce/resource/ball.png";
 	public static final String BALL_BROKENIMG_RSC = "bounce/resource/brokenball.png";
 	public static final String GAMEOVER_BANNER_RSC = "bounce/resource/gameover.png";
@@ -57,6 +59,7 @@ public class BounceGame extends StateBasedGame {
 	public static final String BRICK0_RSC = "bounce/resource/Brick0.png";
 	public static final String BRICK1_RSC = "bounce/resource/Brick1.png";
 	public static final String BRICK2_RSC = "bounce/resource/Brick2.png";
+	public static final String BRICK3_RSC = "bounce/resource/Brick3.png";
 
 	public final int ScreenWidth;
 	public final int ScreenHeight;
@@ -81,6 +84,7 @@ public class BounceGame extends StateBasedGame {
 		super(title);
 		ScreenHeight = height;
 		ScreenWidth = width;
+		level = 1;
 
 		Entity.setCoarseGrainedCollisionBoundary(Entity.AABB);
 		explosions = new ArrayList<Bang>(10);
@@ -111,6 +115,7 @@ public class BounceGame extends StateBasedGame {
 		ResourceManager.loadImage(BRICK0_RSC);
 		ResourceManager.loadImage(BRICK1_RSC);
 		ResourceManager.loadImage(BRICK2_RSC);
+		ResourceManager.loadImage(BRICK3_RSC);
 		
 		Random rand = new Random();
 		ball = new Ball(ScreenWidth / 2, ScreenHeight / 2, (float)(rand.nextFloat() -.5), .3f);
